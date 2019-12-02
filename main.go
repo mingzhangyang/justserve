@@ -13,12 +13,6 @@ func main() {
 	var port int
 	var err error
 
-	if len(os.Args) != 4 && len(os.Args) != 2 {
-		log.Println("invalid arguments.")
-		printUsage()
-		os.Exit(1)
-	}
-
 	switch len(os.Args) {
 	case 4:
 		if os.Args[1] == "-p" {
@@ -35,9 +29,13 @@ func main() {
 		if port < 0 || port > 65535 {
 			log.Fatal("invalid port number")
 		}
-	default:
+	case 2:
 		dir = os.Args[1]
 		port = 9102
+	default:
+		log.Println("invalid arguments.")
+		printUsage()
+		os.Exit(1)
 	}
 
 	info, err := os.Stat(dir)

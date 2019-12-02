@@ -11,3 +11,5 @@ A super simple tool to serve static files
 `./justserve path/to/the/directory/to/be/served` (the default port number `9102` will be used)
 
 `./justserve -p 8888 path/to/the/directory/to/be/served` (using the provided port number)
+
+`./justserve path/to/the/directory/to/be/served -p 8888` (using the provided port number)
