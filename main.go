@@ -1,56 +1,65 @@
 package main
 
 import (
+	"fmt"
 	"log"
-	"flag"
 	"net/http"
 	"os"
-	"fmt"
 	"strconv"
 )
 
-var port string
-
-func init() {
-	flag.StringVar(&port, "p", "6080", "set the port")
-}
-
 func main() {
-	flag.Parse()
-	// log.Println(port)
-	// log.Println(len(os.Args))
-	// fmt.Println(os.Args)
 	var dir string
-	p, err := strconv.Atoi(port)
-	if err != nil {
-		log.Fatal("invalid port argument: not an int\n")
+	var port int
+	var err error
+
+	if len(os.Args) != 4 && len(os.Args) != 2 {
+		log.Println("invalid arguments.")
+		printUsage()
+		os.Exit(1)
 	}
-	if p < 0 || p > 65536 {
-		log.Fatal("invalid port argument: out of range\n")
-	}
-	// no custom port provided
-	if port == "6080" && len(os.Args) == 2 {
-		dir = os.Args[1];
-		// fmt.Printf("dir: %s\n", dir)
-	}
-	// custom port provided
-	if len(os.Args) == 4 {
+
+	switch len(os.Args) {
+	case 4:
 		if os.Args[1] == "-p" {
 			dir = os.Args[3]
-		} else if os.Args[2] == "-p" {
-			dir = os.Args[1]
+			port, err = strconv.Atoi(os.Args[2])
 		}
-		// fmt.Printf("dir: %s\n", dir)
+		if os.Args[2] == "-p" {
+			dir = os.Args[1]
+			port, err = strconv.Atoi(os.Args[3])
+		}
+		if err != nil {
+			log.Fatal("invalid port number")
+		}
+		if port < 0 || port > 65535 {
+			log.Fatal("invalid port number")
+		}
+	default:
+		dir = os.Args[1]
+		port = 9102
 	}
-	if len(os.Args) != 4 && len(os.Args) != 2 {
-		log.Fatal("invalid arguments.\n")
+
+	info, err := os.Stat(dir)
+	if err != nil {
+		log.Fatal("invalid directory to serve")
 	}
+
+	if !info.IsDir() {
+		log.Fatal(dir + " is not a directory")
+	}
+
 	fmt.Printf("Serving the files in %s\n", http.Dir(dir))
 	fs := http.FileServer(http.Dir(dir))
-  	http.Handle("/", fs)
+	http.Handle("/", fs)
 
-	log.Println("Listening on port: " + port)
-	log.Println("Please visit http://localhost:"+port)
+	log.Printf("Listening on port: %d", port)
+	log.Printf("Please visit http://localhost:%d", port)
 	log.Println("Ctrl+C to quit.")
-  	log.Fatal(http.ListenAndServe(":"+port, nil))
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", port), nil))
+}
+
+func printUsage() {
+	fmt.Print("Usage: \n    ./justserve path/to/the/directory/to/be/served\n")
+	fmt.Print("    ./justserve -p 8888 path/to/the/directory/to/be/served\n")
 }
